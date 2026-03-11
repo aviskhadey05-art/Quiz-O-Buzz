@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Attempt Quiz</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+
+    <style>
+        /* BODY */
+
+        body {
+
+            margin: 0;
+
+            font-family: 'Poppins';
+
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+
+            color: white;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: flex-start;
+
+            min-height: 100vh;
+
+            padding: 40px 0;
+
+        }
+
+        #timer {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fde047;
+        }
+
+        /* CARD */
+
+        .card {
+
+            background: rgba(255, 255, 255, 0.12);
+
+            padding: 35px;
+
+            border-radius: 20px;
+
+            width: 700px;
+
+            backdrop-filter: blur(15px);
+
+            border: 1px solid rgba(255, 255, 255, 0.3);
+
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+
+        }
+
+
+        /* TITLE */
+
+        h2 {
+
+            text-align: center;
+
+            margin-bottom: 30px;
+
+        }
+
+
+        /* QUESTION */
+
+        .question {
+
+            margin: 25px 0;
+
+            padding: 15px;
+
+            background: rgba(255, 255, 255, 0.08);
+
+            border-radius: 12px;
+
+        }
+
+
+        /* OPTIONS */
+
+        .option {
+
+            display: block;
+
+            padding: 10px;
+
+            margin: 8px 0;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            background: rgba(255, 255, 255, 0.15);
+
+            transition: 0.2s;
+
+        }
+
+
+        /* OPTION HIGHLIGHT */
+
+        .option.selected {
+
+            background: #38bdf8;
+
+            color: white;
+
+            font-weight: 500;
+
+        }
+
+
+        /* HIDE RADIO */
+
+        .option input {
+
+            display: none;
+
+        }
+
+
+        /* NAME INPUT STYLING */
+
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.85);
+            /* Much more visible placeholder */
+            font-weight: 500;
+        }
+
+
+        /* SUBMIT BUTTON */
+
+        .green {
+
+            display: block;
+
+            margin: 30px auto 0;
+
+            background: #22c55e;
+
+            color: white;
+
+            padding: 12px 25px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            font-size: 16px;
+
+            font-weight: 600;
+
+        }
+
+
+        .green:hover {
+
+            background: #16a34a;
+
+            transform: scale(1.05);
+
+        }
+
+
+        @media(max-width:750px) {
+
+            .card {
+
+                width: 90%;
+
+            }
+
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="card">
+
+
+        <h2 id="title"></h2>
+
+        <div id="startSection" style="text-align:center; margin-bottom:30px;">
+            <p id="quizInfo" style="font-size:18px; margin-bottom:20px;"></p>
+            <input type="text" id="studentName" placeholder="Enter Your Name">
+            <button class="green" onclick="startQuizTimer()">Start Quiz</button>
+        </div>
+
+        <div id="quizSection" style="display:none;">
+            <h3 id="timer" style="text-align:center;margin-bottom:20px;">
+                Time Left: 00:00
+            </h3>
+
+            <div id="questions"></div>
+
+
+            <button class="green" onclick="submitQuiz()">
+
+                Submit Quiz
+
+            </button>
+        </div>
+
+
+    </div>
+
+
+
+    <script>
+
+
+        let params = new URLSearchParams(window.location.search);
+
+        let quizId = params.get("id");
+
+        let quiz = JSON.parse(localStorage.getItem(quizId));
+
+        if (!quiz) {
+            document.getElementById("title").innerText = "Error: Quiz Not Found";
+            document.getElementById("startSection").innerHTML = "<p style='color:#ff4d4d; font-weight:bold;'>The requested quiz does not exist. Please check your link.</p><button class='green' onclick='window.location.href=\"attemptQuiz.html\"'>Go Back</button>";
+            throw new Error("Quiz not found"); // Stop execution
+        }
+
+        if (quiz.status === "draft") {
+            document.getElementById("title").innerText = "Quiz Unavailable";
+            document.getElementById("startSection").innerHTML = "<p style='color:#fbbf24; font-weight:bold;'>This quiz is currently marked as Draft by the teacher.</p><button class='green' onclick='window.location.href=\"attemptQuiz.html\"'>Go Back</button>";
+            throw new Error("Quiz is a draft"); // Stop execution
+        }
+
+        document.getElementById("title").innerText = quiz.title;
+        document.getElementById("quizInfo").innerText = "Time Limit: " + (quiz.timeLimit || 0) + " minutes | Questions: " + (quiz.questions ? quiz.questions.length : 0);
+
+        // TIMER
+
+        let timeLeft = (quiz.timeLimit || 0) * 60; // minutes → seconds
+
+        let timerDisplay = document.getElementById("timer");
+
+        let timer;
+        let studentName = "";
+
+        function startQuizTimer() {
+            studentName = document.getElementById("studentName").value.trim();
+
+            if (!studentName) {
+                alert("Please enter your name to start the quiz.");
+                return;
+            }
+
+            document.getElementById("startSection").style.display = "none";
+            document.getElementById("quizSection").style.display = "block";
+
+            // Initial display setup
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            timerDisplay.innerText = "Time Left: " + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+
+            timer = setInterval(function () {
+
+                minutes = Math.floor(timeLeft / 60);
+                seconds = timeLeft % 60;
+
+                timerDisplay.innerText =
+                    "Time Left: " +
+                    minutes + ":" +
+                    (seconds < 10 ? "0" : "") + seconds;
+
+                timeLeft--;
+
+                if (timeLeft < 0) {
+
+                    clearInterval(timer);
+
+                    alert("Time is up! Quiz submitted automatically.");
+
+                    submitQuiz(); // auto submit
+
+                }
+
+            }, 1000);
+        }
+
+
+        let answers = {};
+
+
+        quiz.questions.forEach((q, i) => {
+
+
+            let div = document.createElement("div");
+
+            div.className = "question";
+
+
+            div.innerHTML = `
+
+<b>Q${i + 1}. ${q.question}</b>
+
+
+${q.options.map(opt => `
+
+<label class="option">
+
+<input type="radio" name="q${i}" value="${opt}"
+
+onclick="selectOption(this,${i})">
+
+${opt}
+
+</label>
+
+`).join("")}
+
+
+`;
+
+
+            document.getElementById("questions").appendChild(div);
+
+
+        });
+
+
+
+        // OPTION SELECT HIGHLIGHT
+
+        function selectOption(radio, index) {
+
+
+            let options = document.getElementsByName("q" + index);
+
+
+            options.forEach(opt => {
+
+                opt.parentElement.classList.remove("selected");
+
+            });
+
+
+            radio.parentElement.classList.add("selected");
+
+
+            answers[index] = radio.value;
+
+
+        }
+
+
+
+        // SUBMIT QUIZ
+
+        function submitQuiz() {
+
+            // Save answers
+            localStorage.setItem(
+                "studentAnswers_" + quizId,
+                JSON.stringify(answers)
+            );
+
+
+            // Calculate score
+
+            let score = 0;
+
+            quiz.questions.forEach((q, i) => {
+
+                if (answers[i] == q.answer) {
+
+                    score++;
+
+                }
+
+            });
+
+
+            // Get existing scores
+
+            let pastScores = JSON.parse(localStorage.getItem("pastScores")) || [];
+
+            // Add this student's score
+            pastScores.push({
+                quizTitle: quiz.title,
+                score: score,
+                total: quiz.questions.length,
+                date: new Date().toLocaleString()
+            });
+
+            // Save back to local storage
+            localStorage.setItem("pastScores", JSON.stringify(pastScores));
+
+            // Get existing teacher scores for this quiz
+            let quizScoresKey = "teacherScores_" + quizId;
+            let allQuizScores = JSON.parse(localStorage.getItem(quizScoresKey)) || [];
+
+            // Add new score to teacher's view record
+            allQuizScores.push({
+                studentName: studentName,
+                score: score,
+                total: quiz.questions.length,
+                date: new Date().toLocaleString()
+            });
+
+            // Save back to teacher records
+            localStorage.setItem(quizScoresKey, JSON.stringify(allQuizScores));
+
+
+            // Redirect
+
+            window.location.href = "result.html?id=" + quizId;
+
+        }
+
+
+    </script>
+
+
+</body>
+
+</html>

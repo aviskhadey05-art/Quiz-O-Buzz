@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Quiz Details</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            height: 70px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: white;
+            align-items: center;
+            padding: 0 40px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        header nav a {
+            color: #6a11cb;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        header nav a:hover {
+            color: #2575fc;
+        }
+
+        header .logo {
+            color: #2575fc;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            text-decoration: none;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins';
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 40px;
+        }
+
+        .card {
+            margin-top: 100px;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            backdrop-filter: blur(15px);
+        }
+
+        .question {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-right: 10px;
+            background: white;
+            color: #6a11cb;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .greenBtn {
+            background: #22c55e;
+            color: white;
+        }
+
+        .greenBtn:hover {
+            background: #16a34a;
+        }
+
+        .linkBox {
+            background: white;
+            color: black;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 10px;
+            word-wrap: break-word;
+        }
+
+        input {
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- STICKY HEADER -->
+    <header class="header">
+        <a href="index.html" class="logo">Quiz-O-Buzz</a>
+        <nav>
+            <a href="teacher.html">Dashboard</a>
+            <a href="help.html">Help</a>
+            <a href="logout.html">Logout</a>
+        </nav>
+    </header>
+
+    <div class="card">
+
+
+        <h2 id="title"></h2>
+
+        <h3 id="view-timeLimit" style="text-align:center;">Time Limit: <span id="timeLimitText"></span> mins <button
+                onclick="editTimeLimit()" style="font-size:12px; padding:5px 10px; margin-left:10px;">Edit</button></h3>
+        <div id="edit-timeLimit" style="display:none; margin-bottom:20px; text-align:center;">
+            <input type="number" id="timeLimitInput" style="width:150px; text-align:center;" placeholder="Minutes">
+            <button onclick="saveTimeLimit()">Save</button>
+            <button onclick="cancelEditTimeLimit()">Cancel</button>
+        </div>
+
+
+        <div id="questions"></div>
+
+
+        <h3>Shareable Link</h3>
+
+
+        <div class="linkBox" id="link"></div>
+
+
+        <button onclick="copyLink()">Copy Quiz Link</button>
+
+
+        <button class="greenBtn" onclick="submitQuiz()">Submit Quiz</button>
+
+
+    </div>
+
+
+    <script>
+
+
+        let params = new URLSearchParams(window.location.search);
+
+        let quizId = params.get("id");
+
+        let quiz = JSON.parse(localStorage.getItem(quizId));
+
+
+        document.getElementById("title").innerText = quiz.title;
+        document.getElementById("timeLimitText").innerText = quiz.timeLimit || 0;
+
+        function editTimeLimit() {
+            document.getElementById("view-timeLimit").style.display = "none";
+            document.getElementById("edit-timeLimit").style.display = "block";
+            document.getElementById("timeLimitInput").value = quiz.timeLimit || 0;
+        }
+
+        function cancelEditTimeLimit() {
+            document.getElementById("edit-timeLimit").style.display = "none";
+            document.getElementById("view-timeLimit").style.display = "block";
+        }
+
+        function saveTimeLimit() {
+            let newTimeLimit = document.getElementById("timeLimitInput").value;
+            quiz.timeLimit = newTimeLimit;
+            localStorage.setItem(quizId, JSON.stringify(quiz));
+            document.getElementById("timeLimitText").innerText = newTimeLimit;
+            cancelEditTimeLimit();
+            alert("Time limit updated successfully!");
+        }
+
+        let qDiv = document.getElementById("questions");
+
+
+
+        // RENDER QUESTIONS
+
+        function renderQuestions() {
+
+            qDiv.innerHTML = "";
+
+            quiz.questions.forEach((q, index) => {
+
+                let div = document.createElement("div");
+
+                div.className = "question";
+
+                div.innerHTML = `
+
+<b>Q${index + 1}:</b>
+
+<div id="view-${index}">
+
+<p>${q.question}</p>
+
+<p>${q.options.join("<br>")}</p>
+
+<p><b>Correct:</b> ${q.answer}</p>
+
+<button onclick="editQuestion(${index})">Edit</button>
+
+</div>
+
+
+<div id="edit-${index}" style="display:none;">
+
+<input id="q-${index}" value="${q.question}" style="width:100%;margin:5px 0;"><br>
+
+<input id="o1-${index}" value="${q.options[0]}" style="width:100%;margin:5px 0;"><br>
+
+<input id="o2-${index}" value="${q.options[1]}" style="width:100%;margin:5px 0;"><br>
+
+<input id="o3-${index}" value="${q.options[2] || ''}" placeholder="Option 3 (Optional)" style="width:100%;margin:5px 0;"><br>
+
+<input id="o4-${index}" value="${q.options[3] || ''}" placeholder="Option 4 (Optional)" style="width:100%;margin:5px 0;"><br>
+
+<input id="a-${index}" value="${q.answer}" placeholder="Correct Answer" style="width:100%;margin:5px 0;"><br>
+
+
+<button onclick="saveQuestion(${index})">Save</button>
+
+<button onclick="cancelEdit(${index})">Cancel</button>
+
+</div>
+
+`;
+
+                qDiv.appendChild(div);
+
+            });
+
+        }
+
+
+
+        // EDIT
+
+        function editQuestion(index) {
+
+            document.getElementById(`view-${index}`).style.display = "none";
+
+            document.getElementById(`edit-${index}`).style.display = "block";
+
+        }
+
+
+
+        // CANCEL
+
+        function cancelEdit(index) {
+
+            document.getElementById(`edit-${index}`).style.display = "none";
+
+            document.getElementById(`view-${index}`).style.display = "block";
+
+        }
+
+
+
+        // SAVE QUESTION
+
+        function saveQuestion(index) {
+
+            let op1 = document.getElementById(`o1-${index}`).value;
+            let op2 = document.getElementById(`o2-${index}`).value;
+            let op3 = document.getElementById(`o3-${index}`).value;
+            let op4 = document.getElementById(`o4-${index}`).value;
+
+            let newOptions = [op1, op2];
+            if (op3 !== "") newOptions.push(op3);
+            if (op4 !== "") newOptions.push(op4);
+
+            quiz.questions[index] = {
+
+                question: document.getElementById(`q-${index}`).value,
+
+                options: newOptions,
+
+                answer: document.getElementById(`a-${index}`).value
+
+            };
+
+
+            localStorage.setItem(quizId, JSON.stringify(quiz));
+
+            alert("Question updated successfully!");
+
+            renderQuestions();
+
+        }
+
+
+
+        // SHARE LINK
+
+        let link = window.location.origin + "/student.html?id=" + quizId;
+
+        document.getElementById("link").innerText = link;
+
+
+
+        function copyLink() {
+
+            navigator.clipboard.writeText(link);
+
+            alert("Quiz link copied!");
+
+        }
+
+
+
+        // SUBMIT QUIZ
+
+        function submitQuiz() {
+
+
+            quiz.final = true;
+
+            localStorage.setItem(quizId, JSON.stringify(quiz));
+
+
+            window.location.href = "submit.html";
+
+
+        }
+
+
+
+        // INITIAL LOAD
+
+        renderQuestions();
+
+
+    </script>
+
+
+</body>
+
+</html>

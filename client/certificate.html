@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate of Achievement</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,700&family=Poppins:wght@300;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #f1f1f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .cert-container {
+            width: 800px;
+            max-width: 100%;
+            background: white;
+            padding: 20px;
+            /* Reduced outer padding */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 10px solid #2575fc;
+            /* Slightly thinner outer border */
+            box-sizing: border-box;
+        }
+
+        .inner-border {
+            border: 2px solid #6a11cb;
+            padding: 40px;
+            position: relative;
+            /* Context for any potential absolutely positioned children */
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6a11cb;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .cert-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 45px;
+            /* Slightly smaller */
+            color: #2575fc;
+            margin: 0 0 15px 0;
+        }
+
+        .cert-subtitle {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        .student-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 40px;
+            font-weight: 700;
+            color: #6a11cb;
+            margin-bottom: 25px;
+            padding-bottom: 5px;
+            display: inline-block;
+            border-bottom: 2px solid #ccc;
+            min-width: 300px;
+            /* Ensure line is wide enough even for short names */
+        }
+
+        .cert-text {
+            font-size: 18px;
+            color: #333;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        .quiz-title {
+            font-weight: bold;
+            font-size: 22px;
+            color: #2575fc;
+            margin-bottom: 40px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-around;
+            /* Distribute space evenly */
+            align-items: flex-end;
+            padding: 0 20px;
+        }
+
+        .footer-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 200px;
+        }
+
+        .signature-line {
+            width: 100%;
+            border-bottom: 1px solid #333;
+            margin-bottom: 10px;
+            height: 30px;
+            /* Space for the signature/date above the line */
+        }
+
+        .signature {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 22px;
+            color: #555;
+            padding-bottom: 5px;
+        }
+
+        .date {
+            font-size: 16px;
+            padding-bottom: 5px;
+        }
+
+        .footer-label {
+            font-size: 14px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .actions {
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 25px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+            transition: 0.3s;
+        }
+
+        .print-btn {
+            background: #2575fc;
+            color: white;
+        }
+
+        .print-btn:hover {
+            background: #1a5bc4;
+        }
+
+        .back-btn {
+            background: #e2e8f0;
+            color: #333;
+        }
+
+        .back-btn:hover {
+            background: #cbd5e1;
+        }
+
+        /* Hide buttons during actual printing */
+        @media print {
+            .actions {
+                display: none;
+            }
+
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .cert-container {
+                box-shadow: none;
+                border: 10px solid #2575fc;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="cert-container">
+        <div class="logo">Quiz-O-Buzz</div>
+        <div class="inner-border">
+            <h1 class="cert-title">Certificate of Achievement</h1>
+            <p class="cert-subtitle">This certificate is proudly presented to</p>
+
+            <div class="student-name" id="studentName">Student Name</div>
+
+            <p class="cert-text">
+                For outstanding performance and achieving a score of >80% in the quiz:
+            </p>
+
+            <div class="quiz-title" id="quizTitle">Quiz Title Here</div>
+
+            <div class="footer">
+                <div class="date" id="dateText">Date</div>
+                <div class="signature">Quiz-O-Buzz Admin</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="back-btn" onclick="goBack()">Go Back</button>
+        <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+    </div>
+
+    <script>
+        // Load data from localStorage
+        let params = new URLSearchParams(window.location.search);
+        let quizId = params.get("id");
+
+        if (quizId) {
+            let quiz = JSON.parse(localStorage.getItem(quizId));
+            if (quiz) {
+                document.getElementById("quizTitle").innerText = quiz.title;
+            }
+
+            // Try to find the user's name from teacherScores record or assume current user
+            let teacherScores = JSON.parse(localStorage.getItem("teacherScores_" + quizId)) || [];
+            let nameToDisplay = "Outstanding Student";
+
+            if (teacherScores.length > 0) {
+                // Get the most recent attempt
+                nameToDisplay = teacherScores[teacherScores.length - 1].studentName;
+            } else {
+                let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+                if (currentUser) nameToDisplay = currentUser.name;
+            }
+
+            document.getElementById("studentName").innerText = nameToDisplay;
+        }
+
+        let today = new Date();
+        document.getElementById("dateText").innerText = today.toLocaleDateString();
+
+        function goBack() {
+            window.location.href = "result.html?id=" + quizId;
+        }
+    </script>
+</body>
+
+</html>

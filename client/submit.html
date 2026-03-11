@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Quiz Created</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+
+            margin: 0;
+
+            font-family: 'Poppins';
+
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            height: 100vh;
+
+            color: white;
+
+        }
+
+
+        .card {
+
+            background: rgba(255, 255, 255, 0.12);
+
+            padding: 40px;
+
+            border-radius: 20px;
+
+            text-align: center;
+
+            backdrop-filter: blur(15px);
+
+        }
+
+
+        h1 {
+
+            margin-bottom: 30px;
+
+        }
+
+
+        button {
+
+            width: 200px;
+
+            padding: 12px;
+
+            margin: 10px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            background: white;
+
+            color: #6a11cb;
+
+            font-weight: bold;
+
+        }
+
+
+        button:hover {
+
+            background: #f3e8ff;
+
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+    <div class="card">
+
+
+        <h1>Quiz Created Successfully!</h1>
+
+
+        <button onclick="goHome()">
+
+            Home
+
+        </button>
+
+
+        <button onclick="goDashboard()">
+
+            Dashboard
+
+        </button>
+
+
+    </div>
+
+
+    <script>
+
+
+        function goHome() {
+
+            window.location.href = "index.html";
+
+        }
+
+
+        function goDashboard() {
+
+            window.location.href = "teacher.html";
+
+        }
+
+
+    </script>
+
+
+</body>
+
+</html>

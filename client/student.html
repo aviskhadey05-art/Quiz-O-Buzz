@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            height: 70px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: white;
+            align-items: center;
+            padding: 0 40px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        nav a {
+            color: #6a11cb;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: #2575fc;
+        }
+
+        .logo {
+            color: #2575fc;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        body {
+
+            margin: 0;
+
+            font-family: 'Poppins', sans-serif;
+
+            height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+
+            color: white;
+
+        }
+
+
+        .container {
+
+            text-align: center;
+
+        }
+
+
+        h1 {
+
+            font-size: 42px;
+
+            /* margin-bottom: 40px; */
+
+            font-weight: 700;
+
+        }
+
+
+        /* CENTERED BUTTON */
+
+        button {
+
+            display: block;
+
+            width: 220px;
+
+            margin: 20px auto;
+
+            padding: 12px;
+
+            font-size: 16px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            background: white;
+
+            color: #6a11cb;
+
+            font-weight: 600;
+
+            transition: 0.3s;
+
+        }
+
+
+        button:hover {
+
+            transform: scale(1.05);
+
+            background: #f3e8ff;
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            h1 {
+
+                font-size: 30px;
+
+            }
+
+            button {
+
+                width: 180px;
+
+            }
+
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+    <header class="header">
+        <h2 class="logo">Quiz-O-Buzz</h2>
+
+        <nav>
+            <a href="about.html">About</a>
+            <a href="help.html">Help</a>
+            <a href="logout.html">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container"
+        style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 800px; padding-top: 80px;">
+
+
+        <h1 id="greeting" style="font-size: 36px; margin-bottom: 30px;">Student Dashboard</h1>
+
+
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px;">
+            <button onclick="attemptQuiz()" style="margin: 0;">
+
+                Attempt Quiz
+
+            </button>
+
+            <button onclick="viewPastScores()" style="margin: 0;">
+
+                View Past Scores
+
+            </button>
+        </div>
+
+
+    </div>
+
+
+    <script>
+
+        window.onload = function () {
+            let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+            if (currentUser) {
+                document.getElementById("greeting").innerText = "Welcome back, " + currentUser.name + "!";
+            }
+        };
+
+        function attemptQuiz() {
+
+            window.location.href = "attemptQuiz.html";
+
+        }
+
+        function viewPastScores() {
+
+            window.location.href = "pastScores.html";
+
+        }
+
+    </script>
+
+
+</body>
+
+</html>

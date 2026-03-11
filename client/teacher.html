@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Teacher Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            height: 70px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: white;
+            align-items: center;
+            padding: 0 40px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        nav a {
+            color: #6a11cb;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: #2575fc;
+        }
+
+        .logo {
+            color: #2575fc;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        body {
+
+            margin: 0;
+
+            font-family: 'Poppins', sans-serif;
+
+            height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+
+            color: white;
+
+        }
+
+
+        .container {
+
+            text-align: center;
+
+        }
+
+
+        h1 {
+
+            font-size: 42px;
+
+            /* margin-bottom: 40px; */
+
+            font-weight: 700;
+
+        }
+
+
+        /* CENTERED BUTTON */
+
+        button {
+
+            display: block;
+
+            width: 220px;
+
+            margin: 20px auto;
+
+            padding: 12px;
+
+            font-size: 16px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            background: white;
+
+            color: #6a11cb;
+
+            font-weight: 600;
+
+            transition: 0.3s;
+
+        }
+
+
+        button:hover {
+
+            transform: scale(1.05);
+
+            background: #f3e8ff;
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            h1 {
+
+                font-size: 30px;
+
+            }
+
+            button {
+
+                width: 180px;
+
+            }
+
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+    <header class="header">
+        <h2 class="logo">Quiz-O-Buzz</h2>
+
+        <nav>
+            <a href="about.html">About</a>
+            <a href="help.html">Help</a>
+            <a href="logout.html">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container"
+        style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 800px; padding-top: 80px;">
+
+        <h1 id="greeting">Teacher Dashboard</h1>
+        <p id="statsDisplay" style="margin-bottom: 20px; font-weight: 300; opacity: 0.9;"></p>
+
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px;">
+            <button onclick="createQuiz()" style="margin: 0;">Create Quiz</button>
+            <button onclick="studentScores()" style="margin: 0;">Student Scores</button>
+        </div>
+
+        <div
+            style="width: 100%; background: rgba(255, 255, 255, 0.12); padding: 30px; border-radius: 20px; backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.3);">
+            <h2 style="margin-bottom: 20px;">My Quizzes</h2>
+            <div id="myQuizzesList" style="text-align: left;"></div>
+        </div>
+
+
+        <script>
+
+            function loadDashboard() {
+                let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+                if (currentUser) {
+                    document.getElementById("greeting").innerText = "Welcome back, " + currentUser.name + "!";
+                }
+
+                let quizListDiv = document.getElementById("myQuizzesList");
+                let quizCount = 0;
+                let htmlContent = "";
+
+                // Loop through local storage
+                for (let i = 0; i < localStorage.length; i++) {
+                    let key = localStorage.key(i);
+                    if (key.startsWith("quiz_")) {
+                        let quizObj = JSON.parse(localStorage.getItem(key));
+
+                        // Only count if it's a valid quiz object with a title
+                        if (quizObj && quizObj.title) {
+                            quizCount++;
+                            let statusBadge = quizObj.status === "active"
+                                ? `<span style="background: #22c55e; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; margin-left: 10px;">ACTIVE</span>`
+                                : `<span style="background: #fbbf24; color: black; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; margin-left: 10px;">DRAFT</span>`;
+
+                            let toggleBtnText = quizObj.status === "active" ? "Mark as Draft" : "Publish Quiz";
+
+                            htmlContent += `
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <strong style="color: #fde047; font-size: 18px;">${quizObj.title}</strong> ${statusBadge}
+                        <br>
+                        <span style="font-size: 12px; opacity: 0.8;">Questions: ${quizObj.questions ? quizObj.questions.length : 0} | Time: ${quizObj.timeLimit || 0} mins</span>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="toggleStatus('${key}')" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px; background: rgba(255,255,255,0.2); color: white;">${toggleBtnText}</button>
+                        <button onclick="window.location.href='quiz.html?id=${key}'" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">Preview / Edit</button>
+                    </div>
+                </div>`;
+                        }
+                    }
+                }
+
+                document.getElementById("statsDisplay").innerText = "You have created " + quizCount + " quizzes.";
+
+                if (quizCount === 0) {
+                    quizListDiv.innerHTML = "<p style='text-align:center;'>You haven't created any quizzes yet. Click 'Create Quiz' to get started!</p>";
+                } else {
+                    quizListDiv.innerHTML = htmlContent;
+                }
+            }
+
+            // Call on load
+            window.onload = loadDashboard;
+
+
+            function createQuiz() {
+
+                window.location.href = "createquiz.html";
+
+            }
+
+
+            function studentScores() {
+
+                window.location.href = "studscores.html";
+
+            }
+
+            function toggleStatus(quizId) {
+                let quizObj = JSON.parse(localStorage.getItem(quizId));
+                if (quizObj) {
+                    if (quizObj.status === "active") {
+                        quizObj.status = "draft";
+                    } else {
+                        quizObj.status = "active";
+                    }
+                    localStorage.setItem(quizId, JSON.stringify(quizObj));
+                    loadDashboard(); // Refresh the list
+                }
+            }
+
+
+        </script>
+
+
+</body>
+
+</html>

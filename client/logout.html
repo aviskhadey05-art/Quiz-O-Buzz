@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            text-align: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 35px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6a11cb;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>You have been logged out</h2>
+        <button onclick="goLogin()">Login Again</button>
+        <button onclick="goHome()">Home</button>
+    </div>
+
+    <script>
+
+        // remove stored users (just clear active session)
+        localStorage.removeItem("user"); // legacy
+        localStorage.removeItem("currentUser"); // new logic
+
+        function goLogin() {
+            window.location.href = "login.html";
+        }
+
+        function goHome() {
+
+            window.location.href = "index.html";
+
+        }
+
+    </script>
+
+</body>
+
+</html>
