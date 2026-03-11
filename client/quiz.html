@@ -161,71 +161,66 @@
     </div>
 
 
-    <script>
+   <script>
+
+let params = new URLSearchParams(window.location.search);
+let quizId = params.get("id");
+
+let quiz;
+
+const qDiv = document.getElementById("questions");
 
 
-        let params = new URLSearchParams(window.location.search);
+// LOAD QUIZ FROM SERVER
+async function loadQuiz(){
 
-        let quizId = params.get("id");
+    try{
 
-        let quiz = JSON.parse(localStorage.getItem(quizId));
+        const response = await fetch("/api/quiz/" + quizId);
 
+        quiz = await response.json();
+
+        if(!quiz){
+            alert("Quiz not found");
+            window.location.href="teacher.html";
+            return;
+        }
 
         document.getElementById("title").innerText = quiz.title;
         document.getElementById("timeLimitText").innerText = quiz.timeLimit || 0;
 
-        function editTimeLimit() {
-            document.getElementById("view-timeLimit").style.display = "none";
-            document.getElementById("edit-timeLimit").style.display = "block";
-            document.getElementById("timeLimitInput").value = quiz.timeLimit || 0;
-        }
+        renderQuestions();
 
-        function cancelEditTimeLimit() {
-            document.getElementById("edit-timeLimit").style.display = "none";
-            document.getElementById("view-timeLimit").style.display = "block";
-        }
+    }catch(error){
 
-        function saveTimeLimit() {
-            let newTimeLimit = document.getElementById("timeLimitInput").value;
-            quiz.timeLimit = newTimeLimit;
-            localStorage.setItem(quizId, JSON.stringify(quiz));
-            document.getElementById("timeLimitText").innerText = newTimeLimit;
-            cancelEditTimeLimit();
-            alert("Time limit updated successfully!");
-        }
+        alert("Quiz could not be loaded");
 
-        let qDiv = document.getElementById("questions");
+    }
+
+}
 
 
+// RENDER QUESTIONS
+function renderQuestions(){
 
-        // RENDER QUESTIONS
+    qDiv.innerHTML="";
 
-        function renderQuestions() {
+    quiz.questions.forEach((q,index)=>{
 
-            qDiv.innerHTML = "";
+        let div=document.createElement("div");
 
-            quiz.questions.forEach((q, index) => {
+        div.className="question";
 
-                let div = document.createElement("div");
+        div.innerHTML=`
 
-                div.className = "question";
-
-                div.innerHTML = `
-
-<b>Q${index + 1}:</b>
+<b>Q${index+1}:</b>
 
 <div id="view-${index}">
-
 <p>${q.question}</p>
-
 <p>${q.options.join("<br>")}</p>
-
 <p><b>Correct:</b> ${q.answer}</p>
-
 <button onclick="editQuestion(${index})">Edit</button>
-
 </div>
-
 
 <div id="edit-${index}" style="display:none;">
 
@@ -235,128 +230,149 @@
 
 <input id="o2-${index}" value="${q.options[1]}" style="width:100%;margin:5px 0;"><br>
 
-<input id="o3-${index}" value="${q.options[2] || ''}" placeholder="Option 3 (Optional)" style="width:100%;margin:5px 0;"><br>
+<input id="o3-${index}" value="${q.options[2] || ''}" placeholder="Option 3" style="width:100%;margin:5px 0;"><br>
 
-<input id="o4-${index}" value="${q.options[3] || ''}" placeholder="Option 4 (Optional)" style="width:100%;margin:5px 0;"><br>
+<input id="o4-${index}" value="${q.options[3] || ''}" placeholder="Option 4" style="width:100%;margin:5px 0;"><br>
 
 <input id="a-${index}" value="${q.answer}" placeholder="Correct Answer" style="width:100%;margin:5px 0;"><br>
 
-
 <button onclick="saveQuestion(${index})">Save</button>
-
 <button onclick="cancelEdit(${index})">Cancel</button>
 
 </div>
 
 `;
 
-                qDiv.appendChild(div);
+        qDiv.appendChild(div);
 
-            });
+    });
 
-        }
-
-
-
-        // EDIT
-
-        function editQuestion(index) {
-
-            document.getElementById(`view-${index}`).style.display = "none";
-
-            document.getElementById(`edit-${index}`).style.display = "block";
-
-        }
+}
 
 
+// EDIT QUESTION
+function editQuestion(index){
 
-        // CANCEL
+    document.getElementById(`view-${index}`).style.display="none";
+    document.getElementById(`edit-${index}`).style.display="block";
 
-        function cancelEdit(index) {
-
-            document.getElementById(`edit-${index}`).style.display = "none";
-
-            document.getElementById(`view-${index}`).style.display = "block";
-
-        }
+}
 
 
+// CANCEL EDIT
+function cancelEdit(index){
 
-        // SAVE QUESTION
+    document.getElementById(`edit-${index}`).style.display="none";
+    document.getElementById(`view-${index}`).style.display="block";
 
-        function saveQuestion(index) {
-
-            let op1 = document.getElementById(`o1-${index}`).value;
-            let op2 = document.getElementById(`o2-${index}`).value;
-            let op3 = document.getElementById(`o3-${index}`).value;
-            let op4 = document.getElementById(`o4-${index}`).value;
-
-            let newOptions = [op1, op2];
-            if (op3 !== "") newOptions.push(op3);
-            if (op4 !== "") newOptions.push(op4);
-
-            quiz.questions[index] = {
-
-                question: document.getElementById(`q-${index}`).value,
-
-                options: newOptions,
-
-                answer: document.getElementById(`a-${index}`).value
-
-            };
+}
 
 
-            localStorage.setItem(quizId, JSON.stringify(quiz));
+// SAVE QUESTION TO DATABASE
+async function saveQuestion(index){
 
-            alert("Question updated successfully!");
+    let op1=document.getElementById(`o1-${index}`).value;
+    let op2=document.getElementById(`o2-${index}`).value;
+    let op3=document.getElementById(`o3-${index}`).value;
+    let op4=document.getElementById(`o4-${index}`).value;
 
-            renderQuestions();
+    let newOptions=[op1,op2];
 
-        }
+    if(op3!="") newOptions.push(op3);
+    if(op4!="") newOptions.push(op4);
 
+    quiz.questions[index]={
 
+        question:document.getElementById(`q-${index}`).value,
+        options:newOptions,
+        answer:document.getElementById(`a-${index}`).value
 
-        // SHARE LINK
+    };
 
-        let link = window.location.origin + "/student.html?id=" + quizId;
+    await fetch("/api/quiz/"+quizId,{
+        method:"PUT",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify(quiz)
+    });
 
-        document.getElementById("link").innerText = link;
+    alert("Question updated successfully!");
 
+    renderQuestions();
 
-
-        function copyLink() {
-
-            navigator.clipboard.writeText(link);
-
-            alert("Quiz link copied!");
-
-        }
-
-
-
-        // SUBMIT QUIZ
-
-        function submitQuiz() {
-
-
-            quiz.final = true;
-
-            localStorage.setItem(quizId, JSON.stringify(quiz));
+}
 
 
-            window.location.href = "submit.html";
+// TIME LIMIT EDIT
+function editTimeLimit(){
+
+    document.getElementById("view-timeLimit").style.display="none";
+    document.getElementById("edit-timeLimit").style.display="block";
+    document.getElementById("timeLimitInput").value=quiz.timeLimit || 0;
+
+}
+
+function cancelEditTimeLimit(){
+
+    document.getElementById("edit-timeLimit").style.display="none";
+    document.getElementById("view-timeLimit").style.display="block";
+
+}
 
 
-        }
+async function saveTimeLimit(){
+
+    let newTimeLimit=document.getElementById("timeLimitInput").value;
+
+    quiz.timeLimit=newTimeLimit;
+
+    await fetch("/api/quiz/"+quizId,{
+        method:"PUT",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify(quiz)
+    });
+
+    document.getElementById("timeLimitText").innerText=newTimeLimit;
+
+    cancelEditTimeLimit();
+
+    alert("Time limit updated!");
+
+}
 
 
+// SHARE LINK
+let link=window.location.origin+"/student.html?id="+quizId;
 
-        // INITIAL LOAD
+document.getElementById("link").innerText=link;
 
-        renderQuestions();
+function copyLink(){
+
+    navigator.clipboard.writeText(link);
+    alert("Quiz link copied!");
+
+}
 
 
-    </script>
+// SUBMIT QUIZ
+async function submitQuiz(){
+
+    await fetch("/api/quiz/"+quizId+"/submit",{
+        method:"POST"
+    });
+
+    window.location.href="submit.html";
+
+}
+
+
+// INITIAL LOAD
+loadQuiz();
+
+</script>
 
 
 </body>
