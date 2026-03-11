@@ -175,90 +175,99 @@
         </div>
 
 
-        <script>
+       <script>
 
-            function loadDashboard() {
-                let currentUser = JSON.parse(localStorage.getItem("currentUser"));
-                if (currentUser) {
-                    document.getElementById("greeting").innerText = "Welcome back, " + currentUser.name + "!";
-                }
+async function loadDashboard() {
 
-                let quizListDiv = document.getElementById("myQuizzesList");
-                let quizCount = 0;
-                let htmlContent = "";
+    let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (currentUser) {
+        document.getElementById("greeting").innerText = "Welcome back, " + currentUser.name + "!";
+    }
 
-                // Loop through local storage
-                for (let i = 0; i < localStorage.length; i++) {
-                    let key = localStorage.key(i);
-                    if (key.startsWith("quiz_")) {
-                        let quizObj = JSON.parse(localStorage.getItem(key));
+    let quizListDiv = document.getElementById("myQuizzesList");
+    let quizCount = 0;
+    let htmlContent = "";
 
-                        // Only count if it's a valid quiz object with a title
-                        if (quizObj && quizObj.title) {
-                            quizCount++;
-                            let statusBadge = quizObj.status === "active"
-                                ? `<span style="background: #22c55e; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; margin-left: 10px;">ACTIVE</span>`
-                                : `<span style="background: #fbbf24; color: black; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; margin-left: 10px;">DRAFT</span>`;
+    try {
 
-                            let toggleBtnText = quizObj.status === "active" ? "Mark as Draft" : "Publish Quiz";
+        // CHANGE: load quizzes from backend instead of localStorage
+        const response = await fetch("https://quiz-o-buzz.onrender.com/api/quiz/my-quizzes");
+        const quizzes = await response.json();
 
-                            htmlContent += `
-                <div style="background: rgba(255,255,255,0.1); padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <strong style="color: #fde047; font-size: 18px;">${quizObj.title}</strong> ${statusBadge}
-                        <br>
-                        <span style="font-size: 12px; opacity: 0.8;">Questions: ${quizObj.questions ? quizObj.questions.length : 0} | Time: ${quizObj.timeLimit || 0} mins</span>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="toggleStatus('${key}')" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px; background: rgba(255,255,255,0.2); color: white;">${toggleBtnText}</button>
-                        <button onclick="window.location.href='quiz.html?id=${key}'" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">Preview / Edit</button>
-                    </div>
-                </div>`;
-                        }
-                    }
-                }
+        quizzes.forEach(quizObj => {
 
-                document.getElementById("statsDisplay").innerText = "You have created " + quizCount + " quizzes.";
+            quizCount++;
 
-                if (quizCount === 0) {
-                    quizListDiv.innerHTML = "<p style='text-align:center;'>You haven't created any quizzes yet. Click 'Create Quiz' to get started!</p>";
-                } else {
-                    quizListDiv.innerHTML = htmlContent;
-                }
-            }
+            let statusBadge = quizObj.status === "active"
+                ? `<span style="background: #22c55e; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; margin-left: 10px;">ACTIVE</span>`
+                : `<span style="background: #fbbf24; color: black; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; margin-left: 10px;">DRAFT</span>`;
 
-            // Call on load
-            window.onload = loadDashboard;
+            let toggleBtnText = quizObj.status === "active" ? "Mark as Draft" : "Publish Quiz";
 
+            htmlContent += `
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <strong style="color: #fde047; font-size: 18px;">${quizObj.title}</strong> ${statusBadge}
+                    <br>
+                    <span style="font-size: 12px; opacity: 0.8;">Questions: ${quizObj.questions ? quizObj.questions.length : 0} | Time: ${quizObj.timeLimit || 0} mins</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="toggleStatus('${quizObj._id}')" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px; background: rgba(255,255,255,0.2); color: white;">${toggleBtnText}</button>
+                    <button onclick="window.location.href='quiz.html?id=${quizObj._id}'" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">Preview / Edit</button>
+                </div>
+            </div>`;
+        });
 
-            function createQuiz() {
+    } catch (error) {
 
-                window.location.href = "createquiz.html";
+        quizListDiv.innerHTML = "<p style='text-align:center;'>Unable to load quizzes.</p>";
+        return;
 
-            }
+    }
+
+    document.getElementById("statsDisplay").innerText = "You have created " + quizCount + " quizzes.";
+
+    if (quizCount === 0) {
+        quizListDiv.innerHTML = "<p style='text-align:center;'>You haven't created any quizzes yet. Click 'Create Quiz' to get started!</p>";
+    } else {
+        quizListDiv.innerHTML = htmlContent;
+    }
+}
 
 
-            function studentScores() {
-
-                window.location.href = "studscores.html";
-
-            }
-
-            function toggleStatus(quizId) {
-                let quizObj = JSON.parse(localStorage.getItem(quizId));
-                if (quizObj) {
-                    if (quizObj.status === "active") {
-                        quizObj.status = "draft";
-                    } else {
-                        quizObj.status = "active";
-                    }
-                    localStorage.setItem(quizId, JSON.stringify(quizObj));
-                    loadDashboard(); // Refresh the list
-                }
-            }
+// Call on load
+window.onload = loadDashboard;
 
 
-        </script>
+function createQuiz() {
+    window.location.href = "createquiz.html";
+}
+
+function studentScores() {
+    window.location.href = "studscores.html";
+}
+
+
+// CHANGE: update status via backend instead of localStorage
+async function toggleStatus(quizId) {
+
+    try {
+
+        await fetch("https://quiz-o-buzz.onrender.com/api/quiz/toggle/" + quizId, {
+            method: "PUT"
+        });
+
+        loadDashboard();
+
+    } catch (error) {
+
+        alert("Could not update quiz status");
+
+    }
+
+}
+
+</script>
 
 
 </body>
