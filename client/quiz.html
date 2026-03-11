@@ -161,7 +161,7 @@
     </div>
 
 
-   <script>
+  <script>
 
 let params = new URLSearchParams(window.location.search);
 let quizId = params.get("id");
@@ -171,18 +171,19 @@ let quiz;
 const qDiv = document.getElementById("questions");
 
 
-// LOAD QUIZ FROM SERVER
+// LOAD QUIZ
 async function loadQuiz(){
 
     try{
 
         const response = await fetch("/api/quiz/" + quizId);
 
-        quiz = await response.json();
+        const data = await response.json();
+
+        quiz = data;
 
         if(!quiz){
             alert("Quiz not found");
-            window.location.href="teacher.html";
             return;
         }
 
@@ -191,7 +192,8 @@ async function loadQuiz(){
 
         renderQuestions();
 
-    }catch(error){
+    }
+    catch(error){
 
         alert("Quiz could not be loaded");
 
@@ -237,6 +239,7 @@ function renderQuestions(){
 <input id="a-${index}" value="${q.answer}" placeholder="Correct Answer" style="width:100%;margin:5px 0;"><br>
 
 <button onclick="saveQuestion(${index})">Save</button>
+
 <button onclick="cancelEdit(${index})">Cancel</button>
 
 </div>
@@ -268,8 +271,8 @@ function cancelEdit(index){
 }
 
 
-// SAVE QUESTION TO DATABASE
-async function saveQuestion(index){
+// SAVE QUESTION (updates quiz locally only)
+function saveQuestion(index){
 
     let op1=document.getElementById(`o1-${index}`).value;
     let op2=document.getElementById(`o2-${index}`).value;
@@ -289,22 +292,41 @@ async function saveQuestion(index){
 
     };
 
-    await fetch("/api/quiz/"+quizId,{
-        method:"PUT",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify(quiz)
-    });
-
-    alert("Question updated successfully!");
+    alert("Question updated locally. Save quiz to update database.");
 
     renderQuestions();
 
 }
 
 
-// TIME LIMIT EDIT
+// UPDATE TIME LIMIT (backend route)
+async function saveTimeLimit(){
+
+    let newTimeLimit=document.getElementById("timeLimitInput").value;
+
+    await fetch("/api/quiz/"+quizId+"/time",{
+
+        method:"PUT",
+
+        headers:{
+            "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+            timeLimit:newTimeLimit
+        })
+
+    });
+
+    document.getElementById("timeLimitText").innerText=newTimeLimit;
+
+    cancelEditTimeLimit();
+
+    alert("Time limit updated!");
+
+}
+
+
 function editTimeLimit(){
 
     document.getElementById("view-timeLimit").style.display="none";
@@ -321,29 +343,6 @@ function cancelEditTimeLimit(){
 }
 
 
-async function saveTimeLimit(){
-
-    let newTimeLimit=document.getElementById("timeLimitInput").value;
-
-    quiz.timeLimit=newTimeLimit;
-
-    await fetch("/api/quiz/"+quizId,{
-        method:"PUT",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify(quiz)
-    });
-
-    document.getElementById("timeLimitText").innerText=newTimeLimit;
-
-    cancelEditTimeLimit();
-
-    alert("Time limit updated!");
-
-}
-
-
 // SHARE LINK
 let link=window.location.origin+"/student.html?id="+quizId;
 
@@ -352,6 +351,7 @@ document.getElementById("link").innerText=link;
 function copyLink(){
 
     navigator.clipboard.writeText(link);
+
     alert("Quiz link copied!");
 
 }
@@ -360,11 +360,11 @@ function copyLink(){
 // SUBMIT QUIZ
 async function submitQuiz(){
 
-    await fetch("/api/quiz/"+quizId+"/submit",{
-        method:"POST"
+    await fetch("/api/quiz/"+quizId+"/publish",{
+        method:"PUT"
     });
 
-    window.location.href="submit.html";
+    alert("Quiz published successfully!");
 
 }
 
@@ -373,7 +373,6 @@ async function submitQuiz(){
 loadQuiz();
 
 </script>
-
 
 </body>
 
