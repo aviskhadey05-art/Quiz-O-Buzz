@@ -184,6 +184,9 @@ async function loadDashboard() {
     if (currentUser) {
         document.getElementById("greeting").innerText =
             "Welcome back, " + currentUser.name + "!";
+    } else {
+        window.location.href = "login.html";
+        return;
     }
 
     let quizListDiv = document.getElementById("myQuizzesList");

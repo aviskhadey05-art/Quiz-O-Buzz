@@ -116,6 +116,7 @@ exports.getTeacherQuizzes = async (req, res) => {
 
     } catch (error) {
 
+        console.error("Error in getTeacherQuizzes:", error);
         res.status(500).json({ message: "Server error" });
 
     }
