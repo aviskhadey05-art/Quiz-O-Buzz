@@ -401,6 +401,8 @@ function submitQuiz(){
     });
 
     localStorage.setItem("pastScores",JSON.stringify(pastScores));
+    localStorage.setItem(quizId, JSON.stringify(quiz));
+    localStorage.setItem("studentAnswers_" + quizId, JSON.stringify(answers));
 
     window.location.href="result.html?id="+quizId;
 
